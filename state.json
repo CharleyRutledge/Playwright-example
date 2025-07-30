@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "https://playwright.dev",
+      "localStorage": [
+        {
+          "name": "example-storage-key",
+          "value": "example-storage-value"
+        }
+      ]
+    }
+  ]
+} 
