@@ -50,15 +50,29 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        playwright install --with-deps ${{ matrix.browser }}
+        # Install Playwright browsers (Edge is included in Chromium)
+        if [ "${{ matrix.browser }}" = "edge" ]; then
+          playwright install --with-deps chromium
+        else
+          playwright install --with-deps ${{ matrix.browser }}
+        fi
     
     # Performance tracking with timing
     - name: Run Playwright tests with performance tracking
       id: test-execution
       run: |
         echo "Starting test execution for ${{ matrix.browser }}"
+        # Create necessary directories
+        mkdir -p test-results
+        mkdir -p allure-results-${{ matrix.browser }}
+        
         start_time=$(date +%s)
-        pytest tests/ -v --browser ${{ matrix.browser }} --alluredir=allure-results-${{ matrix.browser }}
+        # Handle Edge browser (use chromium with edge channel)
+        if [ "${{ matrix.browser }}" = "edge" ]; then
+          pytest tests/ -v --browser chromium --channel=edge --alluredir=allure-results-${{ matrix.browser }}
+        else
+          pytest tests/ -v --browser ${{ matrix.browser }} --alluredir=allure-results-${{ matrix.browser }}
+        fi
         end_time=$(date +%s)
         duration=$((end_time - start_time))
         echo "Test execution completed in ${duration} seconds for ${{ matrix.browser }}"
@@ -71,7 +85,7 @@ jobs:
       if: always()
       with:
         subject-name: "playwright-tests-${{ matrix.browser }}"
-        subject-digest: ${{ hashFiles('**/test-results/**') }}
+        subject-path: "."
     
     # Performance metrics collection
     - name: Collect performance metrics
@@ -140,6 +154,7 @@ jobs:
         echo "- **Chromium**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Firefox**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
         echo "- **WebKit**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Edge**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Management Features Used:" >> $GITHUB_STEP_SUMMARY
         echo "✅ **Caching**: Python deps + Playwright browsers" >> $GITHUB_STEP_SUMMARY
