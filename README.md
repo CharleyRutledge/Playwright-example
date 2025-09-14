@@ -146,6 +146,63 @@ This project includes HTML reporting functionality. After running tests, an HTML
 - ✅ **Screenshots**: Automatically captures screenshots on failures
 - ✅ **Test metadata**: Displays test markers, descriptions, and execution details
 
+### Playwright Recording Features
+
+This project uses Playwright's built-in recording capabilities to capture comprehensive test execution data.
+
+**Key Features:**
+- 📊 **Trace Recording**: Detailed execution traces with screenshots, snapshots, and source code
+- 🎥 **Video Recording**: Full video recordings of test execution
+- 📸 **Screenshot on Failure**: Automatic screenshots when tests fail
+- 📄 **Page Content**: HTML content saved on test failures for debugging
+- 🧹 **Automatic Cleanup**: Configurable cleanup of old recordings
+
+**Using Playwright Recording:**
+
+```bash
+# Run tests with all recording features enabled
+pytest
+
+# Run with visible browser (great for debugging)
+pytest --headed
+
+# Run specific test with tracing
+pytest tests/test_example.py::test_search_functionality
+
+# Run with slow motion for detailed observation
+pytest --slowmo 2000
+```
+
+**Viewing Recordings:**
+
+```bash
+# Open trace file in Playwright's interactive trace viewer
+npx playwright show-trace test-results/trace_20241201_143022.zip
+
+# View videos directly (open in any video player)
+# Files are located in: test-results/videos/
+
+# View screenshots directly (open in any image viewer)
+# Files are located in: test-results/screenshot_*.png
+
+```
+
+**Recording Directory Structure:**
+```
+test-results/
+├── trace_20241201_143022.zip      # Detailed execution trace
+├── screenshot_test_failure_143025.png  # Failure screenshots
+├── page_content_test_failure_143025.html  # Page HTML on failure
+└── videos/                        # Video recordings
+    └── test-1-chromium.webm
+```
+
+**Opening Trace Files:**
+```bash
+# Open trace in Playwright's interactive viewer
+npx playwright show-trace test-results/trace_20241201_143022.zip
+```
+
 ## Project Structure
 
 ```
@@ -154,14 +211,19 @@ Playwright example/
 │   ├── Starting Rules.md          # Core project rules
 │   └── Testing Rules.md           # Testing-specific rules
 ├── tests/
-│   ├── conftest.py               # Pytest configuration with base URL
+│   ├── conftest.py               # Pytest configuration with Playwright recording
 │   ├── test_example.py           # Basic tests using base URL
 │   └── test_page_objects.py      # Page Object Model tests
+├── test-results/                 # Playwright recordings (auto-generated)
+│   ├── trace_*.zip              # Execution traces
+│   ├── screenshot_*.png         # Failure screenshots
+│   ├── page_content_*.html      # Page HTML on failures
+│   └── videos/                  # Video recordings
 ├── playwright-report/            # HTML test reports (auto-generated)
 │   └── report.html              # Latest test report
-├── requirements.txt              # Python dependencies (latest versions)
 ├── pytest.ini                   # Pytest configuration with HTML reporter
-├── playwright.config.ts          # Playwright configuration
+├── pytest_html_report_hooks.py  # HTML report customization
+├── requirements.txt              # Python dependencies (latest versions)
 ├── state.json                   # Example storage state file
 ├── README.md                    # Project documentation
 └── .gitignore                   # Git ignore file
@@ -241,10 +303,35 @@ This project follows the [official Playwright documentation](https://playwright.
 pytest --headed --slowmo 2000
 ```
 
+## CI/CD Pipeline
+
+This project includes GitHub Actions workflow for automated testing in CI/CD pipelines.
+
+### GitHub Actions Features:
+- ✅ **Automated testing** on push and pull requests
+- ✅ **Test recordings preserved** as artifacts (30 days retention)
+- ✅ **HTML reports** uploaded for easy viewing
+- ✅ **Cross-platform testing** on Ubuntu runners
+- ✅ **Automatic dependency installation**
+
+### Viewing CI Results:
+1. Go to your repository's **Actions** tab
+2. Click on any workflow run
+3. Download **artifacts** to view:
+   - `playwright-report/` - HTML test reports
+   - `test-recordings/` - Videos, traces, screenshots
+   - `html-report/` - Standalone HTML report
+
+### Local vs CI Differences:
+- **Local**: Recordings saved to `test-results/` folder
+- **CI**: Recordings uploaded as GitHub artifacts (downloadable)
+- **CI**: No interactive trace viewer (download files to view locally)
+
 ## Resources
 
 - [Playwright Documentation](https://playwright.dev/)
 - [Playwright Python API](https://playwright.dev/python/docs/api/class-playwright)
 - [Pytest Documentation](https://docs.pytest.org/)
 - [Playwright Best Practices](https://playwright.dev/python/docs/best-practices)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [Playwright Test Use Options](https://playwright.dev/docs/test-use-options) 
