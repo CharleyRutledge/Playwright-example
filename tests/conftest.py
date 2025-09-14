@@ -1,5 +1,6 @@
 import pytest
 import os
+import allure
 from datetime import datetime
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -74,21 +75,40 @@ def trace_test(page):
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Take screenshot on test failure using Playwright's built-in functionality."""
+    """Take screenshot on test failure and attach to Allure report."""
     outcome = yield
     rep = outcome.get_result()
     
     if rep.when == "call" and rep.failed:
-        # Take screenshot on test failure
+        # Take screenshot on test failure and attach to Allure
         if hasattr(item, 'funcargs') and 'page' in item.funcargs:
             page = item.funcargs['page']
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             screenshot_path = f"test-results/screenshot_{item.name}_{timestamp}.png"
             page.screenshot(path=screenshot_path)
-            print(f"Screenshot saved: {screenshot_path}")
+            
+            # Attach screenshot to Allure report
+            with open(screenshot_path, 'rb') as f:
+                allure.attach(f.read(), name=f"Screenshot_{item.name}", attachment_type=allure.attachment_type.PNG)
             
             # Also save page content for debugging
             content_path = f"test-results/page_content_{item.name}_{timestamp}.html"
             with open(content_path, 'w', encoding='utf-8') as f:
                 f.write(page.content())
-            print(f"Page content saved: {content_path}") 
+            
+            # Attach page content to Allure report
+            with open(content_path, 'r', encoding='utf-8') as f:
+                allure.attach(f.read(), name=f"Page_Content_{item.name}", attachment_type=allure.attachment_type.HTML)
+            
+            print(f"Screenshot and page content attached to Allure report")
+
+
+@pytest.fixture(scope="function")
+def allure_environment():
+    """Set Allure environment information."""
+    allure.dynamic.environment(
+        base_url="https://playwright.dev",
+        browser="chromium",
+        platform="Windows",
+        python_version=os.sys.version
+    ) 

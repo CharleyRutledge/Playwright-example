@@ -47,7 +47,11 @@ playwright/.cache/
 # Pytest
 .pytest_cache/
 .coverage
-htmlcov/
+htmlcov
+
+# Allure
+allure-results/
+allure-report/
 
 # Logs
 *.log

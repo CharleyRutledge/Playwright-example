@@ -1,4 +1,5 @@
 import pytest
+import allure
 from playwright.sync_api import Page, expect
 
 
@@ -38,6 +39,14 @@ class TestPageObjectModel:
     """Test class demonstrating Page Object Model pattern."""
     
     @pytest.mark.smoke
+    @allure.title("Homepage Page Object Test")
+    @allure.description("Test using Page Object Model pattern with base URL")
+    @allure.severity(allure.severity_level.CRITICAL)
+    @allure.epic("Playwright Testing")
+    @allure.feature("Page Object Model")
+    @allure.story("Homepage Navigation")
+    @allure.label("test-type", "smoke")
+    @allure.label("pattern", "page-object")
     def test_homepage_with_page_object(self, page: Page):
         """Test using Page Object Model pattern with base URL."""
         # Create page object instance
@@ -53,6 +62,14 @@ class TestPageObjectModel:
         expect(home_page.main_heading).to_contain_text("Playwright enables reliable end-to-end testing")
     
     @pytest.mark.regression
+    @allure.title("Search Page Object Test")
+    @allure.description("Test search functionality using Page Object Model with base URL")
+    @allure.severity(allure.severity_level.NORMAL)
+    @allure.epic("Playwright Testing")
+    @allure.feature("Page Object Model")
+    @allure.story("Search Functionality")
+    @allure.label("test-type", "regression")
+    @allure.label("pattern", "page-object")
     def test_search_with_page_object(self, page: Page):
         """Test search functionality using Page Object Model with base URL."""
         # Create page object instance
@@ -71,6 +88,14 @@ class TestPageObjectModel:
         expect(home_page.search_box).to_be_visible()
     
     @pytest.mark.slow
+    @allure.title("Documentation Navigation Page Object Test")
+    @allure.description("Test documentation navigation using Page Object Model with base URL")
+    @allure.severity(allure.severity_level.MINOR)
+    @allure.epic("Playwright Testing")
+    @allure.feature("Page Object Model")
+    @allure.story("Documentation Navigation")
+    @allure.label("test-type", "slow")
+    @allure.label("pattern", "page-object")
     def test_docs_navigation_with_page_object(self, page: Page):
         """Test documentation navigation using Page Object Model with base URL."""
         # Create page object instance
