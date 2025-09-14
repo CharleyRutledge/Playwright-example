@@ -2,3 +2,5 @@ playwright
 pytest
 pytest-playwright
 allure-pytest 
+pytest-xdist
+pytest-rerunfailures
