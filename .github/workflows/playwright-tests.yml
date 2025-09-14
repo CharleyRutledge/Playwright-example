@@ -38,8 +38,9 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-playwright-all-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
+          ${{ runner.os }}-playwright-all-
           ${{ runner.os }}-playwright-
     
     - uses: actions/setup-python@v4
@@ -50,12 +51,25 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        # Install Playwright browsers (Edge is included in Chromium)
+        # Install all Playwright browsers to avoid missing executable errors
+        playwright install --with-deps
+        # Verify browser installation
+        playwright --version
+        ls -la ~/.cache/ms-playwright/
+    
+    # Verify browser availability before testing
+    - name: Verify browser availability
+      run: |
+        echo "Verifying browser availability for ${{ matrix.browser }}"
         if [ "${{ matrix.browser }}" = "edge" ]; then
-          playwright install --with-deps chromium
+          echo "Edge browser will use Chromium with Edge channel"
+          playwright install chromium
         else
-          playwright install --with-deps ${{ matrix.browser }}
+          echo "Installing ${{ matrix.browser }} browser"
+          playwright install ${{ matrix.browser }}
         fi
+        # List available browsers
+        ls -la ~/.cache/ms-playwright/
     
     # Performance tracking with timing
     - name: Run Playwright tests with performance tracking
@@ -69,7 +83,9 @@ jobs:
         start_time=$(date +%s)
         # Handle Edge browser (use chromium with edge channel)
         if [ "${{ matrix.browser }}" = "edge" ]; then
-          pytest tests/ -v --browser chromium --channel=edge --alluredir=allure-results-${{ matrix.browser }}
+          # Set environment variable for Edge channel
+          export PLAYWRIGHT_CHROMIUM_CHANNEL=edge
+          pytest tests/ -v --browser chromium --alluredir=allure-results-${{ matrix.browser }}
         else
           pytest tests/ -v --browser ${{ matrix.browser }} --alluredir=allure-results-${{ matrix.browser }}
         fi
