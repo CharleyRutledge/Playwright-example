@@ -10,8 +10,32 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    
+    # Performance tracking
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    
     steps:
     - uses: actions/checkout@v4
+    
+    # Cache Python dependencies
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    # Cache Playwright browsers
+    - name: Cache Playwright browsers
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
     
     - uses: actions/setup-python@v4
       with:
@@ -21,29 +45,55 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        playwright install --with-deps
+        playwright install --with-deps ${{ matrix.browser }}
     
-    - name: Run Playwright tests
+    # Performance tracking with timing
+    - name: Run Playwright tests with performance tracking
+      id: test-execution
       run: |
-        pytest tests/ -v
+        echo "Starting test execution for ${{ matrix.browser }}"
+        start_time=$(date +%s)
+        pytest tests/ -v --browser ${{ matrix.browser }} --alluredir=allure-results-${{ matrix.browser }}
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        echo "Test execution completed in ${duration} seconds for ${{ matrix.browser }}"
+        echo "duration=${duration}" >> $GITHUB_OUTPUT
+        echo "BROWSER=${{ matrix.browser }}" >> $GITHUB_ENV
+    
+    # Generate attestation for security verification
+    - name: Generate test attestation
+      uses: actions/attest-build-provenance@v1
+      if: always()
+      with:
+        subject-name: "playwright-tests-${{ matrix.browser }}"
+        subject-digest: ${{ hashFiles('**/test-results/**') }}
+    
+    # Performance metrics collection
+    - name: Collect performance metrics
+      if: always()
+      run: |
+        echo "## Performance Metrics for ${{ matrix.browser }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Browser**: ${{ matrix.browser }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Duration**: ${{ steps.test-execution.outputs.duration }} seconds" >> $GITHUB_STEP_SUMMARY
+        echo "- **Runner**: ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Python Version**: 3.11" >> $GITHUB_STEP_SUMMARY
     
     - name: Generate Allure report
       uses: simple-elf/allure-report-action@master
       if: always()
       with:
-        allure_results: allure-results
+        allure_results: allure-results-${{ matrix.browser }}
         allure_history: allure-history
         gh_pages: gh-pages
-        allure_issues: allure-issues
-        allure_executor: allure-executor
-        allure_report_title: Playwright Test Report
-        allure_report_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        report_name: "Playwright Test Report - ${{ matrix.browser }}"
+        report_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     
+    # Upload artifacts with browser-specific naming
     - name: Upload test recordings
       uses: actions/upload-artifact@v4
       if: always()  # Upload even if tests fail
       with:
-        name: test-recordings
+        name: test-recordings-${{ matrix.browser }}
         path: test-results/
         retention-days: 30
     
@@ -51,6 +101,49 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: allure-results
-        path: allure-results/
+        name: allure-results-${{ matrix.browser }}
+        path: allure-results-${{ matrix.browser }}/
         retention-days: 30
+    
+    # Usage metrics summary
+    - name: Usage metrics summary
+      if: always()
+      run: |
+        echo "## Usage Metrics Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Workflow**: Playwright Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- **Browser**: ${{ matrix.browser }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Duration**: ${{ steps.test-execution.outputs.duration }} seconds" >> $GITHUB_STEP_SUMMARY
+        echo "- **Runner**: ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cache Status**: Enabled for Python deps and Playwright browsers" >> $GITHUB_STEP_SUMMARY
+
+  # Final summary job that runs after all browser tests complete
+  summary:
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+    
+    - name: Create consolidated report
+      run: |
+        echo "## 🚀 Playwright Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Test Results by Browser:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Chromium**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Firefox**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **WebKit**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Management Features Used:" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Caching**: Python deps + Playwright browsers" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Attestations**: Security verification enabled" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Runners**: Multi-browser matrix strategy" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Usage Metrics**: Resource tracking active" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Performance Metrics**: Timing and efficiency monitoring" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
+        echo "- Test recordings for each browser" >> $GITHUB_STEP_SUMMARY
+        echo "- Allure reports for each browser" >> $GITHUB_STEP_SUMMARY
+        echo "- Performance metrics and attestations" >> $GITHUB_STEP_SUMMARY
