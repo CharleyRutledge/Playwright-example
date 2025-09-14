@@ -132,6 +132,7 @@ jobs:
         path: test-results/
         retention-days: 30
     
+    # Generate Allure report
     - name: Upload Allure results
       uses: actions/upload-artifact@v4
       if: always()
@@ -162,6 +163,42 @@ jobs:
       with:
         path: ./artifacts
     
+    # Load test report history from GitHub Pages
+    - name: Load test report history
+      uses: actions/checkout@v4
+      if: always()
+      continue-on-error: true
+      with:
+        ref: gh-pages
+        path: gh-pages
+    
+    # Combine all browser results
+    - name: Combine Allure results
+      run: |
+        # Create combined results directory
+        mkdir -p combined-allure-results
+        # Copy all browser results to combined directory
+        find ./artifacts -name "allure-results-*" -type d -exec cp -r {}/. combined-allure-results/ \;
+        echo "Combined Allure results from all browsers"
+    
+    # Build Allure report with history
+    - name: Build test report
+      uses: simple-elf/allure-report-action@master
+      if: always()
+      with:
+        gh_pages: gh-pages
+        allure_history: allure-history
+        allure_results: combined-allure-results
+    
+    # Publish to GitHub Pages
+    - name: Publish test report
+      uses: peaceiris/actions-gh-pages@v3
+      if: always()
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: allure-history
+    
     - name: Create consolidated report
       run: |
         echo "## 🚀 Playwright Test Execution Summary" >> $GITHUB_STEP_SUMMARY
@@ -181,5 +218,15 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
         echo "- Test recordings for each browser" >> $GITHUB_STEP_SUMMARY
-        echo "- Allure reports for each browser" >> $GITHUB_STEP_SUMMARY
+        echo "- Allure results for each browser" >> $GITHUB_STEP_SUMMARY
+        echo "- **Live Allure Report**: Published to GitHub Pages" >> $GITHUB_STEP_SUMMARY
         echo "- Performance metrics and attestations" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Live Test Report:" >> $GITHUB_STEP_SUMMARY
+        echo "Your Allure report is now live at: **https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/**" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The report includes:" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Combined results from all browsers (Chromium, Firefox, WebKit, Edge)" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Historical test data and trends" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Interactive charts and analytics" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Screenshots and test recordings" >> $GITHUB_STEP_SUMMARY
