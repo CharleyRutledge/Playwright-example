@@ -26,3 +26,5 @@ This file contains the rules for the project.
 - Rule 10: If any tests fail, use all the MCP's to fix it.
 - Rule 11: If any tests have warnings, use all the MCP's to fix it.
 - Rule 12: If any tests need to be written, use all the MCP's to implement it.
+- Rule 13: update the project with any new functionality, readme, requirements etc.
+- Rule 14: Run the requirements.txt file, if it is already done then skip

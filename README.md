@@ -131,20 +131,31 @@ pytest tests/test_example.py::TestExample
 pytest tests/test_example.py::TestExample::test_basic_navigation
 ```
 
-### HTML Reporter
+### Allure Reporting
 
-This project includes HTML reporting functionality. After running tests, an HTML report is automatically generated in the `playwright-report/` directory.
+This project uses Allure reporting for comprehensive test reporting and visualization.
 
-**View the HTML report:**
-- The report is generated at: `playwright-report/report.html`
-- Open this file in your browser to view detailed test results
-- The report includes test results, timing, and any failures with screenshots
+**Generate Allure Report:**
+```bash
+# Run tests to generate Allure results
+pytest tests/ -v
 
-**Features of the HTML report:**
-- ✅ **Self-contained**: No external dependencies required
-- ✅ **Detailed results**: Shows pass/fail status, timing, and error details
-- ✅ **Screenshots**: Automatically captures screenshots on failures
-- ✅ **Test metadata**: Displays test markers, descriptions, and execution details
+# Generate and serve Allure report locally
+allure serve allure-results
+
+# Generate static Allure report
+allure generate allure-results --clean -o allure-report
+allure open allure-report
+```
+
+**Features of Allure reporting:**
+- ✅ **Rich test visualization**: Interactive test results with detailed information
+- ✅ **Test categorization**: Tests organized by severity, status, and features
+- ✅ **Screenshots on failure**: Automatic screenshot capture and attachment
+- ✅ **Page content on failure**: HTML content saved for debugging
+- ✅ **Test history**: Track test results over time
+- ✅ **Environment information**: Browser, platform, and configuration details
+- ✅ **CI/CD integration**: Automatic report generation in GitHub Actions
 
 ### Playwright Recording Features
 
@@ -219,10 +230,9 @@ Playwright example/
 │   ├── screenshot_*.png         # Failure screenshots
 │   ├── page_content_*.html      # Page HTML on failures
 │   └── videos/                  # Video recordings
-├── playwright-report/            # HTML test reports (auto-generated)
-│   └── report.html              # Latest test report
-├── pytest.ini                   # Pytest configuration with HTML reporter
-├── pytest_html_report_hooks.py  # HTML report customization
+├── allure-results/              # Allure test results (auto-generated)
+├── allure-report/               # Allure HTML reports (generated locally)
+├── pytest.ini                   # Pytest configuration with Allure
 ├── requirements.txt              # Python dependencies (latest versions)
 ├── state.json                   # Example storage state file
 ├── README.md                    # Project documentation
@@ -309,23 +319,23 @@ This project includes GitHub Actions workflow for automated testing in CI/CD pip
 
 ### GitHub Actions Features:
 - ✅ **Automated testing** on push and pull requests
+- ✅ **Allure reports** automatically generated and published
 - ✅ **Test recordings preserved** as artifacts (30 days retention)
-- ✅ **HTML reports** uploaded for easy viewing
 - ✅ **Cross-platform testing** on Ubuntu runners
 - ✅ **Automatic dependency installation**
 
 ### Viewing CI Results:
 1. Go to your repository's **Actions** tab
 2. Click on any workflow run
-3. Download **artifacts** to view:
-   - `playwright-report/` - HTML test reports
+3. View **Allure report** in the workflow summary
+4. Download **artifacts** to view:
    - `test-recordings/` - Videos, traces, screenshots
-   - `html-report/` - Standalone HTML report
+   - `allure-results/` - Raw Allure test data
 
 ### Local vs CI Differences:
-- **Local**: Recordings saved to `test-results/` folder
-- **CI**: Recordings uploaded as GitHub artifacts (downloadable)
-- **CI**: No interactive trace viewer (download files to view locally)
+- **Local**: Use `allure serve allure-results` to view reports
+- **CI**: Allure reports published automatically in workflow
+- **CI**: Test recordings uploaded as downloadable artifacts
 
 ## Resources
 

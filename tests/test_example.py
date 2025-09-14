@@ -1,4 +1,5 @@
 import pytest
+import allure
 from playwright.sync_api import Page, expect
 
 
@@ -6,6 +7,13 @@ class TestExample:
     """Example test class following Playwright's official documentation patterns."""
     
     @pytest.mark.smoke
+    @allure.title("Basic Navigation Test")
+    @allure.description("Test basic navigation to Playwright website using base URL")
+    @allure.severity(allure.severity_level.CRITICAL)
+    @allure.epic("Playwright Testing")
+    @allure.feature("Navigation")
+    @allure.story("Basic Navigation")
+    @allure.label("test-type", "smoke")
     def test_basic_navigation(self, page: Page):
         """Test basic navigation to Playwright website using base URL."""
         # Navigate to Playwright homepage using base URL
@@ -18,6 +26,13 @@ class TestExample:
         expect(page.locator("h1")).to_contain_text("Playwright enables reliable end-to-end testing")
     
     @pytest.mark.regression
+    @allure.title("Search Functionality Test")
+    @allure.description("Test search functionality on Playwright website using base URL")
+    @allure.severity(allure.severity_level.NORMAL)
+    @allure.epic("Playwright Testing")
+    @allure.feature("Search")
+    @allure.story("Search Functionality")
+    @allure.label("test-type", "regression")
     def test_search_functionality(self, page: Page):
         """Test search functionality on Playwright website using base URL."""
         # Navigate to the website using base URL
@@ -38,6 +53,13 @@ class TestExample:
         expect(search_box).to_be_visible()
     
     @pytest.mark.slow
+    @allure.title("Documentation Navigation Test")
+    @allure.description("Test navigation to documentation page using base URL")
+    @allure.severity(allure.severity_level.MINOR)
+    @allure.epic("Playwright Testing")
+    @allure.feature("Navigation")
+    @allure.story("Documentation Navigation")
+    @allure.label("test-type", "slow")
     def test_documentation_navigation(self, page: Page):
         """Test navigation to documentation page using base URL."""
         # Navigate to the website using base URL
